@@ -63,7 +63,7 @@ def solve_map(map):
 	elif (userIn == '4'):
 		city1In = input("First City: ")
 		city2In = input("Second City: ")
-		city_connection(map, city1In, city2In)
+		print(city_connection(map, city1In, city2In))
 	else:
 		print("quitting")
 
@@ -71,7 +71,7 @@ def solve_map(map):
 #Task 1. Number of cities directly connected to a query city.
 #Complete!
 def find_city_num(maps, city):
-	count = 0;
+	count = 0
 	for map in maps:
 		if map[0] == city or map[1] == city:
 			count+=1
@@ -91,7 +91,16 @@ def hop_connection(maps, city1, city2, d):
 #Task 4. Given two query cities, return YES/NO for whether there is a connection (not necessarily direct)
 #between them; if YES, print one solution out, together with the actual total distance of the connection.
 def city_connection(maps, city1, city2):
-	print("hi")
+	miles = 0
+
+	for map in maps:
+		if (map[0] == city1 and map[1] == city2):
+			miles = map[2]
+	
+	if(miles != 0):
+		return miles
+	else:
+		return "No connection"
 
 
 
