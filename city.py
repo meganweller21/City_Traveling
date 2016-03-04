@@ -1,35 +1,45 @@
 # Megan Weller
 # Ashley Bertrand
 # CSCI 338 Concepts
+import re
 
 def read_file(file_name):
     file = open(file_name, "r")
-    next_line = file.readline()
+    line = file.readline().replace("-----------------------", "").replace("\t", "")    
     map = []
     
-    while next_line:
-        travels = next_line.split()  # splits line into list of tokens
-        fromCity = (travels[0])  
-        toCity = (travels[1])     
-        miles = (travels[2]) 
-        map.insert(0, (fromCity, toCity, miles))
-        next_line = file.readline()
+    while line:
+        if (line == '\n'):  #we don't want to read in a blank line
+            line = file.readline().replace("\t", " ").replace("-----------------------", "")
+        else:
+            line = line.strip() #strip unnessesary white space
+            line = re.sub('\s\s+', ',', line)   #replace lone tabs with a comma
+            fromCity, toCity, miles = line.split(',')  # splits line into list of tokens
+            map.insert(0, (fromCity, toCity, miles))   # insert into the map
+            
+            line = file.readline().replace("\t", " ").replace("-----------------------", "")
+       
         
     map.reverse()                # original order
+    print(map)
     return map
 
 def open_map(file_name):
-	cityMap = read_file(file_name)
-	clone = cityMap[:]
+    cityMap = read_file(file_name)
+    clone = cityMap[:]
 
-	solve_map(clone)
+    solve_map(clone)
 
 
-open_map("citymap.txt")
+
 
 #--------------------------------------------
 
 
 
 def solve_map(map):
-	print ("I'm here")
+    print ("I'm here")
+
+
+
+open_map("citymap.txt")
