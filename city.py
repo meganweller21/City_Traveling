@@ -81,16 +81,6 @@ def find_city_num(maps, city):
 #Task 2. Given two query cities, return YES/NO for whether there is a direct
 #connection (edge) between them.
 def find_edge(maps, city1, city2):
-	print("hi")
-
-#Task 3. Given two query cities and an integer d, return YES/NO for whether there is a k-hop connection,
-#k ≤ d, between them; if YES, print one solution out, to gether with the total distance of the d hops.
-def hop_connection(maps, city1, city2, d):
-	print("hi")
-
-#Task 4. Given two query cities, return YES/NO for whether there is a connection (not necessarily direct)
-#between them; if YES, print one solution out, together with the actual total distance of the connection.
-def city_connection(maps, city1, city2):
 	miles = 0
 
 	for map in maps:
@@ -101,6 +91,16 @@ def city_connection(maps, city1, city2):
 		return miles
 	else:
 		return "No connection"
+
+#Task 3. Given two query cities and an integer d, return YES/NO for whether there is a k-hop connection,
+#k ≤ d, between them; if YES, print one solution out, to gether with the total distance of the d hops.
+def hop_connection(maps, city1, city2, d):
+	print("hi")
+
+#Task 4. Given two query cities, return YES/NO for whether there is a connection (not necessarily direct)
+#between them; if YES, print one solution out, together with the actual total distance of the connection.
+def city_connection(maps, city1, city2):
+	
 
 
 
