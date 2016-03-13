@@ -71,7 +71,7 @@ def solve_map(results):
 
 #Task 1. Number of cities directly connected to a query city.
 #Complete!
-def find_city_num(maps, city):
+def find_city_num(results, city):
 	count = 0
 	for result in results:
 		if result[0] == city or result[1] == city:
@@ -81,7 +81,7 @@ def find_city_num(maps, city):
 
 #Task 2. Given two query cities, return YES/NO for whether there is a direct
 #connection (edge) between them.
-def find_edge(maps, city1, city2):
+def find_edge(results, city1, city2):
 	miles = 0
 
 	for result in results:
@@ -97,7 +97,6 @@ def find_edge(maps, city1, city2):
 #k ≤ d, between them; if YES, print one solution out, to gether with the total distance of the d hops.
 
 def hop_connection(results, city1, city2, d):
-	miles = 0
 	mapCity = city1
 	i = 0
 	netMiles = 0
@@ -105,26 +104,47 @@ def hop_connection(results, city1, city2, d):
 	mapConnections = []
 
 	for result in results:
-		if(result[0] == mapCity or i <= int(d)):
-			#print(mapCity)
-			mapCity = result[1]
-
-			netMiles = result[2]
-			#print(map[1])
-			i+1
-			
-		if result[1] == city2:
-			mapConnections.insert(0, (netMiles))
-			break;
-			
+		if(result[0] == mapCity):
+			for i in range(0, int(d)):
+				mapConnections.insert(0, (mapCity, result[2]))
+				mapCity = result[1]
+				netMiles = result[2]
+					
+		print( "before if: ", str(mapCity), ' ', result[0], ' ', result[1])
+		if (result[0] == mapCity and result[1] == city2):
+			mapConnections.insert(0, (city2, result[2]))
+			mapConnections.reverse()
+			for mapConnection in mapConnections:
+				print (mapConnection[0], ' ', mapConnection[1])
+			return netMiles	
 	
-	mapConnections.reverse()
-	return mapConnections[0]
+	#mapConnections.reverse()
+	return netMiles
 	
 #Task 4. Given two query cities, return YES/NO for whether there is a connection (not necessarily direct)
 #between them; if YES, print one solution out, together with the actual total distance of the connection.
 def city_connection(results, city1, city2):
-	print("hi")
+	mapConnections = []
+	mapCity = city1
+	for result in results:
+		if(result[0] == mapCity):
+			print("Hi I'm here: ", mapCity, ' ', result[1])
+			mapConnections.insert(0, (mapCity, results[2]))
+
+			if(result[1] == city2):
+
+				mapConnections.insert(0, (result[1], result[2]))
+				mapConnections.reverse()
+				for mapConnection in mapConnections:
+					print(str(mapConnection[0]), " ", str(mapConnection[1]))
+				return "There is a connection"
+				break;
+			else:
+				mapCity = result[1]
+				#print (str(mapCity))
+			
+	
+
 
 
 open_map("citymap.txt")
