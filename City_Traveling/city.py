@@ -63,11 +63,11 @@ def solve_map(results):
 			city1In = input("First city: ")
 			city2In = input("Second city: ")
 			hopsIn = input("Hop value: ")
-			print(hop_connection(city1In, city2In, hopsIn))
+			hops(results, city1In, city2In)
 		elif (userIn == '4'):
 			city1In = input("First city: ")
 			city2In = input("Second city: ")
-			city_connection(results, valid_cities, city1In, city2In)
+			depth_first_helper(results, city1In, city2In, valid_cities)
 		else:
 			print("Goodbye!")
 			break
@@ -112,11 +112,7 @@ def get_connections(results, city):
 
 #Task 3. Given two query cities and an integer d, return YES/NO for whether there is a k-hop connection,
 #k ≤ d, between them; if YES, print one solution out, together with the total distance of the d hops.
-def hop_connection(results, city1, city2, d):
-
-#Task 4. Given two query cities, return YES/NO for whether there is a connection (not necessarily direct)
-#between them; if YES, print one solution out, together with the actual total distance of the connection.
-def city_connection(results, valid_cities, city1, city2):
+def hop_connection(results, valid_cities, city1, city2, d):
 	#invalid inputs
 	if(city1 not in valid_cities and city2 not in valid_cities):
 		print("Provided cities are not in the database")
@@ -126,6 +122,33 @@ def city_connection(results, valid_cities, city1, city2):
 		return
 	if(city2 not in valid_cities):
 		print("Second city is not in the database")
+		return
+
+def hops(start, end, hops):
+    start = ord(start.upper())
+    end = ord(end.upper())
+    distance = end - start + 1
+    if abs(distance) <= hops:
+        if distance > 0:
+            path = range(start, end + 1)
+        else:
+            path = list(range(end, start + 1))[::-1]
+        print(", ".join(chr(c) for c in path))
+    else:
+        print("No connection.")
+
+#Task 4. Given two query cities, return YES/NO for whether there is a connection (not necessarily direct)
+#between them; if YES, print one solution out, together with the actual total distance of the connection.
+def city_connection(results, valid_cities, city1, city2):
+	#invalid inputs
+	if(city1 not in valid_cities and city2 not in valid_cities):
+		print(city1, "and", city2, "are not in the database")
+		return
+	if(city1 not in valid_cities):
+		print(city1, "is not in the database")
+		return
+	if(city2 not in valid_cities):
+		print(city2, "is not in the database")
 		return
 
 	#alphabetize city inputs to make runtime possible
@@ -140,9 +163,8 @@ def city_connection(results, valid_cities, city1, city2):
 	if temp != city1:
 		switched = True
 
-	nodes = slice(1, None)
 	paths = [[0, city1]]
-	added = True
+	found = True
 
 	#direct connections
 	for result in results:
@@ -153,15 +175,15 @@ def city_connection(results, valid_cities, city1, city2):
 			return
 
 	#indirect connections
-	while added:
-		added = False
+	while found:
+		found = False
 		for first, second, weight in results:
 			for path in paths:
 				candidate = None
 				#found a new link in path
-				if (first in path[nodes]) and (second not in path[nodes]):
+				if (first in path) and (second not in path):
 					candidate = second
-				elif (first not in path[nodes]) and (second in path[nodes]):
+				elif (first not in path) and (second in path):
 					candidate = first
 				#build a path
 				if candidate:
@@ -171,9 +193,10 @@ def city_connection(results, valid_cities, city1, city2):
 					#unique list of paths
 					if new_path not in paths:
 						paths.append(new_path)
-						added = True
+
 				#found a valid path
-				if city2 in path[nodes]:
+				if city2 in path:
+					found = True
 					#save distance
 					distance = path[0]
 					del path[0]
@@ -189,5 +212,63 @@ def city_connection(results, valid_cities, city1, city2):
 	
 	#no connections
 	print("NO")
+
+def depth_first_helper(results, start_city, end_city, valid_cities):
+	stack = []
+	visited = []
+	first = start_city
+
+	#invalid inputs
+	if(start_city not in valid_cities and end_city not in valid_cities):
+		print(start_city, " and ", end_city, " are not in the database")
+		return
+	if(start_city not in valid_cities):
+		print(start_city, " is not in the database")
+		return
+	if(end_city not in valid_cities):
+		print(end_city, " is not in the database")
+		return
+
+	adj_cities = get_connections(results, start_city)
+	depth_first_search(results, start_city, end_city, adj_cities, stack, visited, first)
+
+def depth_first_search(results, start_city, end_city, adj_cities, stack, visited, first):
+	#start_city is visited
+	visited.append(start_city)
+
+	#end_city is discovered
+	if(end_city in visited): 
+		#if last city in stack is end_city
+		if (stack[-1] == end_city):
+			#full valid path
+			stack.insert(0, first)
+			print("YES")
+			print(*stack, sep=', ')
+			print(get_total_distance(results, stack), "miles")
+		return stack
+
+	#add adj_city to stack to keep track of that path to the end_city
+	for adj_city in adj_cities:
+		if adj_city not in visited:
+			stack.append(adj_city)
+			adj_cities = get_connections(results, adj_city)
+			depth_first_search(results, adj_city, end_city, adj_cities, stack, visited, first)
+
+def get_total_distance(results, path):
+	total_distance = 0
+	for index in range(len(path)):
+		if(index+1 < len(path)):
+			#summing distances between pairs of cities in path
+			total_distance += get_distance(results, path[index], path[index+1])
+			index+1
+	return total_distance
+
+def get_distance(results, city1, city2):
+	for result in results:
+		if (result[0] == city1 and result[1] == city2):
+			miles = result[2]
+		elif (result[0] == city2 and result[1] == city1):
+			miles = result[2]
+	return miles
 
 open_map("citymap.txt")
