@@ -42,6 +42,8 @@ def solve_map(results):
 	valid_cities = [toCity[0] for toCity in results]
 	valid_cities = sorted(set(valid_cities))
 
+	dijkstra(results, valid_cities, "Billings")
+
 	#continue prompt until '5' or invalid input
 	while True:
 		print ("\n1. Enter 1 to see how many cities are connected to a query city")
@@ -63,7 +65,8 @@ def solve_map(results):
 			city1In = input("First city: ")
 			city2In = input("Second city: ")
 			hopsIn = input("Hop value: ")
-			hop_connection(results, valid_cities, city1In, city2In, hopsIn)
+
+			#hop_connection(results, valid_cities, city1In, city2In, hopsIn)
 		elif (userIn == '4'):
 			city1In = input("First city: ")
 			city2In = input("Second city: ")
@@ -125,9 +128,8 @@ def find_edge(results, city1, city2):
 		elif (result[0] == city2 and result[1] == city1):
 			miles = result[2]
 	
-	#distance between the same cities will be 0, but an edge exists, so YES is printed
 	#distance between two cities is greater than 0, so a direct edge exists
-	if(city1 == city2 or miles != 0):
+	if(miles != 0):
 		print("YES")
 		return True
 	else:
@@ -168,6 +170,109 @@ def hop_connection(results, valid_cities, city1, city2, d):
 		return
 
 	#contine with Task 3 here...
+
+#returns list of tuples
+#a tuple contains two cities and the weight between them
+def get_weighted_matrix(results):
+	matrix = []
+	for city1, city2, weight in results:
+		#same cities get 0's (violates k-hop rules)
+		if(city1 == city2):
+			matrix.append((city1, city2, 0))
+		#direct cities get 1's (1-hop)
+		else:
+			matrix.append((city1, city2, 1))
+
+	return matrix
+
+#returns a city's corresponding index
+def get_index_from_city(valid_cities, city):
+	i = 0
+	for valid_city in valid_cities:
+		if(valid_city == city):
+			return i
+		i = i + 1
+	return -1
+
+#returns an index's corresponding city
+def get_city_from_index(valid_cities, index):
+	for i in range(len(valid_cities)):
+		if(i == index):
+			return valid_cities[i]
+	return "Error"
+
+#returns true if two indices represent the same city
+def same_cities(valid_cities, i, j):
+	if get_city_from_index(valid_cities, i) == get_city_from_index(valid_cities, j):
+		return True
+	else:
+		return False
+
+#if connection exists, weight is 1
+def is_direct(results, valid_cities, i, j):
+	city1 = get_city_from_index(valid_cities, i)
+	city2 = get_city_from_index(valid_cities, j)
+	if find_edge(results, city1, city2):
+		return 1
+	else:
+		return 0
+
+#used where there is not a direct path between two vertices
+infinity = 1000000
+
+#takes a start city and shows the distance to every other city
+def dijkstra(results, valid_cities, start_city):
+	results = [('A', 'B', 1), 
+ 			   ('B', 'C', 2),
+ 			   ('C', 'D', 3),
+ 			   ('A', 'C', 4),
+ 			   ('A', 'A', 0)]
+
+	valid_cities = ['A', 'B', 'C', 'D']
+
+	start_city = 'B'
+
+	distances = []		#list of ints
+	shortest = []		#list of bools (true if vertex is in shortest path or if shortest distance is finalized)
+	num_verticies = len(valid_cities)
+
+	#initializing lists
+	for index in range(num_verticies):
+		distances.append(infinity)
+		shortest.append(False)
+
+	#distances at start_city is 0
+	distances[get_index_from_city(valid_cities, start_city)] = 0
+
+	#updating distance is path to j through shortest_vertex is smaller
+	for i in range(num_verticies - 1):
+		shortest_vertex = shortest_distance(valid_cities, distances, shortest)
+		shortest[shortest_vertex] = True
+		for j in range(num_verticies):
+			if((not shortest[j]) and 
+				(not same_cities(valid_cities, shortest_vertex, j)) and 
+				(distances[shortest_vertex] != infinity) and 
+				((distances[shortest_vertex] + (is_direct(results, valid_cities, shortest_vertex, j)) < distances[j]))):
+				distances[j] = (distances[shortest_vertex] + (is_direct(results, valid_cities, shortest_vertex, j)))
+			j = j + 1
+		i = i + 1
+
+	#printing results for testing purposes
+	for index in range(num_verticies):
+		print(start_city, get_city_from_index(valid_cities, index), distances[index])
+
+#finding the minimum distance vertex
+def shortest_distance(valid_cities, distances, shortest):
+	shortest_path = infinity
+	shortest_vertex = -1
+
+	#finding the smallest path and updating shortest_vertex accordingly
+	for valid in valid_cities:
+		if(not shortest[get_index_from_city(valid_cities, valid)] and distances[get_index_from_city(valid_cities, valid)] <= shortest_path):
+			shortest_path = distances[get_index_from_city(valid_cities, valid)]
+			shortest_vertex = get_index_from_city(valid_cities, valid)
+
+	return shortest_vertex
 
 #Task 4. Given two query cities, return YES/NO for whether there is a connection (not necessarily direct)
 #between them; if YES, print one solution out, together with the actual total distance of the connection.
