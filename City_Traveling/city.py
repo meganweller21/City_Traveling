@@ -1,6 +1,6 @@
 # Megan Weller
 # Ashley Bertrand
-# CSCI 305 Concepts
+# CSCI 305 Lab 2
 # Python 3.5.1
 
 import re
@@ -42,38 +42,165 @@ def solve_map(results):
 	valid_cities = [toCity[0] for toCity in results]
 	valid_cities = sorted(set(valid_cities))
 
-	dijkstra(results, valid_cities, "Billings")
-
 	#continue prompt until '5' or invalid input
 	while True:
-		print ("\n1. Enter 1 to see how many cities are connected to a query city")
-		print ("2. Enter 2 to see if two cities have a direct connection")
-		print ("3. Enter 3 to see if two cities have a k-hop connection")
-		print ("4. Enter 4 to get a connection path between two cities and the total distance")
-		print ("5. Enter 5 to quit\n")
+		print ("\n1. Enter 1 to see how many cities are connected to a query city.")
+		print ("2. Enter 2 to see if two cities have a direct connection.")
+		print ("3. Enter 3 to see if two cities have a k-hop connection.")
+		print ("4. Enter 4 to get a connection path between two cities and the total distance.")
+		print ("5. Enter 5 to quit.\n")
 
 		userIn = input("Enter your choice: ")
 
 		if (userIn == '1'):
 			cityIn = input("Enter the city: ")
-			print(find_city_num(results, cityIn))
+			task1(results, cityIn)
 		elif (userIn == '2'):
-			city1In = input("First city: ")
-			city2In = input("Second city: ")
-			find_edge(results, city1In, city2In)
+			city1In = input("Start city: ")
+			city2In = input("Destination city: ")
+			task2(results, city1In, city2In)
 		elif (userIn == '3'):
-			city1In = input("First city: ")
-			city2In = input("Second city: ")
+			city1In = input("Start city: ")
+			city2In = input("Destination city: ")
 			hopsIn = input("Hop value: ")
-
-			#hop_connection(results, valid_cities, city1In, city2In, hopsIn)
+			task3(results, valid_cities, city1In, city2In, hopsIn)
 		elif (userIn == '4'):
-			city1In = input("First city: ")
-			city2In = input("Second city: ")
-			depth_first_helper(results, valid_cities, city1In, city2In)
+			city1In = input("Start city: ")
+			city2In = input("Destination city: ")
+			task4(results, valid_cities, city1In, city2In)
 		else:
-			print("Goodbye!")
+			print("\nGoodbye!")
 			break
+
+#Task 1. Number of cities directly connected to a query city.
+def task1(results, city):
+	count = 0
+	for result in results:
+		if result[0] == city or result[1] == city:
+			count+=1
+	print()
+	print(count)
+
+#Task 2. Given two query cities, return YES/NO for whether there is a direct
+#connection (edge) between them.
+def task2(results, city1, city2):
+	miles = 0
+
+	for result in results:
+		if (result[0] == city1 and result[1] == city2):
+			miles = result[2]
+		elif (result[0] == city2 and result[1] == city1):
+			miles = result[2]
+	
+	#distance between two cities is greater than 0, so a direct edge exists
+	if(miles != 0):
+		print("\nYES")
+		return True
+	else:
+		print("\nNO")
+		return False
+
+#Task 3. Given two query cities and an integer d, return YES/NO for whether there is a k-hop connection,
+#k ≤ d, between them; if YES, print one solution out, together with the total distance of the d hops.
+def task3(results, valid_cities, city1, city2, d):
+	#converting d from string to int
+	d = int(d)
+
+	#ensuring that a valid value for d was entered
+	if d < 1:
+		print("The number of hops must be greater than 0.")
+		return
+
+	#invalid inputs
+	if(city1 not in valid_cities and city2 not in valid_cities):
+		print(city1, "and", city2, "are not in the database.")
+		return
+	if(city1 not in valid_cities):
+		print(city1, "is not in the database.")
+		return
+	if(city2 not in valid_cities):
+		print(city2, "is not in the database.")
+		return
+
+	#distances must be non-zero to be included in k-hop definition
+	if city1 == city2:
+		print(city1, "is 0 miles from itself. In order to fit the k-hop definition, distance must be greater than 0 miles.")
+		return
+
+	#implies there must be a direct connection
+	if d == 1:
+		if(find_edge(results, city1, city2)):
+			print("\nYES")
+			print(city1, ",", city2)
+			print(get_distance(results, city1, city2), "miles")
+			return
+		else:
+			print("\nNO")
+			return
+
+	#a direct connection exists
+	if(find_edge(results, city1, city2)):
+		print("\nYES")
+		print(city1, ",", city2)
+		print(get_distance(results, city1, city2), "miles")
+		return
+	#no connection exists in the given number of hops
+	elif(d < get_min_hops(results, valid_cities, city1, city2)):
+		print("\nNO")
+		return
+	#at least one connection exists in the given number of hops
+	else:
+		dijkstra(results, valid_cities, city1, city2, visited=[], distances={}, predecessors={})
+		return
+
+#Task 4. Given two query cities, return YES/NO for whether there is a connection (not necessarily direct)
+#between them; if YES, print one solution out, together with the actual total distance of the connection.
+def task4(results, valid_cities, city1, city2):
+	#invalid inputs
+	if(city1 not in valid_cities and city2 not in valid_cities):
+		print(city1, "and", city2, "are not in the database.")
+		return
+	if(city1 not in valid_cities):
+		print(city1, "is not in the database.")
+		return
+	if(city2 not in valid_cities):
+		print(city2, "is not in the database.")
+		return
+
+	#distances must be non-zero for a connection to exist
+	if city1 == city2:
+		print(city1, "is 0 miles from itself. No connection exists.")
+		return
+
+	#a direct connection exists
+	if(find_edge(results, city1, city2)):
+		print("\nYES")
+		print(city1, ",", city2)
+		print(get_distance(results, city1, city2), "miles")
+		return
+	#looking for a connection
+	elif(is_connection(results, valid_cities, get_index_from_city(valid_cities, city1), get_index_from_city(valid_cities, city2))):
+		dijkstra(results, valid_cities, city1, city2, visited=[], distances={}, predecessors={})
+		return
+	else:
+		print("\nNO")
+		return
+
+#same function as task2 except nothing gets printed
+def find_edge(results, city1, city2):
+	miles = 0
+
+	for result in results:
+		if (result[0] == city1 and result[1] == city2):
+			miles = result[2]
+		elif (result[0] == city2 and result[1] == city1):
+			miles = result[2]
+	
+	#distance between two cities is greater than 0, so a direct edge exists
+	if(miles != 0):
+		return True
+	else:
+		return False
 
 #returns a given city's direct connections as a list
 def get_connections(results, city):
@@ -108,82 +235,41 @@ def get_distance(results, city1, city2):
 			miles = result[2]
 	return miles
 
-#Task 1. Number of cities directly connected to a query city.
-def find_city_num(results, city):
-	count = 0
-	for result in results:
-		if result[0] == city or result[1] == city:
-			count+=1
+#uses depth first search and returns true if there is a connection between two cities
+def is_connection(results, valid_cities, i, j):
+	start_city = get_city_from_index(valid_cities, i)
+	end_city = get_city_from_index(valid_cities, j)
 
-	return count
+	stack = []
+	visited = []
 
-#Task 2. Given two query cities, return YES/NO for whether there is a direct
-#connection (edge) between them.
-def find_edge(results, city1, city2):
-	miles = 0
+	#push start_city onto stack
+	stack.append(start_city)
 
-	for result in results:
-		if (result[0] == city1 and result[1] == city2):
-			miles = result[2]
-		elif (result[0] == city2 and result[1] == city1):
-			miles = result[2]
-	
-	#distance between two cities is greater than 0, so a direct edge exists
-	if(miles != 0):
-		print("YES")
+	#while stack is not empty
+	while(stack):
+		#current is top of stack
+		current = stack[-1]
+
+		#pop from stack
+		del stack[-1]
+		
+		if (current in visited):
+			continue
+		
+		#mark current as visited
+		visited.append(current)
+		adj_cities = get_connections(results, current)
+
+		#push adjacent cities onto stack
+		for adj_city in adj_cities:
+			stack.insert(0, adj_city)
+
+	#found a path
+	if end_city in visited:
 		return True
 	else:
-		print("NO")
 		return False
-
-#Task 3. Given two query cities and an integer d, return YES/NO for whether there is a k-hop connection,
-#k ≤ d, between them; if YES, print one solution out, together with the total distance of the d hops.
-def hop_connection(results, valid_cities, city1, city2, d):
-	#converting d from string to int
-	d = int(d)
-
-	#ensuring that a valid value for d was entered
-	if d < 1:
-		print("The number of hops must be greater than 0.")
-		return
-
-	#invalid inputs
-	if(city1 not in valid_cities and city2 not in valid_cities):
-		print(city1, "and", city2, "are not in the database.")
-		return
-	if(city1 not in valid_cities):
-		print(city1, "is not in the database.")
-		return
-	if(city2 not in valid_cities):
-		print(city2, "is not in the database.")
-		return
-
-	#distances must be non-zero to be included in k-hop definition
-	if city1 == city2:
-		print(city1, "is 0 miles from itself. In order to fit the k-hop definition, distance must be greater than 0 miles.")
-		return
-
-	#a direct connection exists
-	if (find_edge(results, city1, city2)):
-		print(city1, ",", city2)
-		print(get_distance(results, city1, city2), "miles")
-		return
-
-	#contine with Task 3 here...
-
-#returns list of tuples
-#a tuple contains two cities and the weight between them
-def get_weighted_matrix(results):
-	matrix = []
-	for city1, city2, weight in results:
-		#same cities get 0's (violates k-hop rules)
-		if(city1 == city2):
-			matrix.append((city1, city2, 0))
-		#direct cities get 1's (1-hop)
-		else:
-			matrix.append((city1, city2, 1))
-
-	return matrix
 
 #returns a city's corresponding index
 def get_index_from_city(valid_cities, city):
@@ -201,36 +287,73 @@ def get_city_from_index(valid_cities, index):
 			return valid_cities[i]
 	return "Error"
 
-#returns true if two indices represent the same city
-def same_cities(valid_cities, i, j):
-	if get_city_from_index(valid_cities, i) == get_city_from_index(valid_cities, j):
-		return True
-	else:
-		return False
-
-#if connection exists, weight is 1
+#returns true if there is a direct connection between cities
 def is_direct(results, valid_cities, i, j):
 	city1 = get_city_from_index(valid_cities, i)
 	city2 = get_city_from_index(valid_cities, j)
 	if find_edge(results, city1, city2):
-		return 1
+		return True
 	else:
-		return 0
+		return False
+
+#weight of connection is returned
+def get_weight_of_connection(results, valid_cities, i, j):
+	if is_direct(results, valid_cities, i, j):
+		return 1
+	#dummy value that represents the number of hops between city i and city j
+	if is_connection(results, valid_cities, i, j):
+		return 99
+	return 0
+
+#Dijkstra's Algorithm to find the shortest path
+def dijkstra(results, valid_cities, start_city, end_city, visited=[], distances={}, predecessors={}):
+	#end condition
+	if start_city == end_city:
+		path = []
+		previous = end_city
+		
+		#build shortest path
+		while previous != None:
+			path.append(previous)
+			previous = predecessors.get(previous, None)
+
+		path.reverse()
+		print("\nYES")
+		print(*path, sep=', ')
+		print(get_total_distance(results, path), "miles")
+	else:     
+		#initializes start distance to 0
+		if not visited: 
+			distances[start_city] = 0
+
+		#visit the adjacent cities
+		adj_cities = get_connections(results, start_city)
+		for adj_city in adj_cities:
+			if adj_city not in visited:
+				new_distance = distances[start_city] + 1
+				if new_distance < distances.get(adj_city, float('inf')):
+					distances[adj_city] = new_distance
+					predecessors[adj_city] = start_city
+		
+		#mark start_city as visited
+		visited.append(start_city)
+		
+		#select the non visited node with lowest distance
+		unvisited={}
+		for valid in valid_cities:
+			if valid not in visited:
+				unvisited[valid] = distances.get(valid, float('inf')) 
+		new_start = min(unvisited, key = unvisited.get)
+
+		#recursive call on new_start
+		dijkstra(results, valid_cities, new_start, end_city, visited, distances, predecessors)
 
 #used where there is not a direct path between two vertices
 infinity = 1000000
 
-#takes a start city and shows the distance to every other city
-def dijkstra(results, valid_cities, start_city):
-	results = [('A', 'B', 1), 
- 			   ('B', 'C', 2),
- 			   ('C', 'D', 3),
- 			   ('A', 'C', 4),
- 			   ('A', 'A', 0)]
-
-	valid_cities = ['A', 'B', 'C', 'D']
-
-	start_city = 'B'
+#returns the minimum number of hops required between two cities
+def get_min_hops(results, valid_cities, start_city, end_city):
+	print("\nPlease be patient while I find your results. It may take a minute...")
 
 	distances = []		#list of ints
 	shortest = []		#list of bools (true if vertex is in shortest path or if shortest distance is finalized)
@@ -250,16 +373,17 @@ def dijkstra(results, valid_cities, start_city):
 		shortest[shortest_vertex] = True
 		for j in range(num_verticies):
 			if((not shortest[j]) and 
-				(not same_cities(valid_cities, shortest_vertex, j)) and 
+				(is_connection(results, valid_cities, shortest_vertex, j)) and 
 				(distances[shortest_vertex] != infinity) and 
-				((distances[shortest_vertex] + (is_direct(results, valid_cities, shortest_vertex, j)) < distances[j]))):
-				distances[j] = (distances[shortest_vertex] + (is_direct(results, valid_cities, shortest_vertex, j)))
+				((distances[shortest_vertex] + (get_weight_of_connection(results, valid_cities, shortest_vertex, j)) < distances[j]))):
+				distances[j] = (distances[shortest_vertex] + (get_weight_of_connection(results, valid_cities, shortest_vertex, j)))
 			j = j + 1
 		i = i + 1
 
-	#printing results for testing purposes
-	for index in range(num_verticies):
-		print(start_city, get_city_from_index(valid_cities, index), distances[index])
+	#minimum number of hops required between start_city and end_city
+	min_hops = distances[get_index_from_city(valid_cities, end_city)]
+
+	return min_hops
 
 #finding the minimum distance vertex
 def shortest_distance(valid_cities, distances, shortest):
@@ -273,48 +397,5 @@ def shortest_distance(valid_cities, distances, shortest):
 			shortest_vertex = get_index_from_city(valid_cities, valid)
 
 	return shortest_vertex
-
-#Task 4. Given two query cities, return YES/NO for whether there is a connection (not necessarily direct)
-#between them; if YES, print one solution out, together with the actual total distance of the connection.
-def depth_first_helper(results, valid_cities, start_city, end_city):
-	stack = []
-	visited = []
-	first = start_city
-
-	#invalid inputs
-	if(start_city not in valid_cities and end_city not in valid_cities):
-		print(start_city, "and", end_city, "are not in the database.")
-		return
-	if(start_city not in valid_cities):
-		print(start_city, "is not in the database.")
-		return
-	if(end_city not in valid_cities):
-		print(end_city, "is not in the database.")
-		return
-
-	adj_cities = get_connections(results, start_city)
-	depth_first_search(results, start_city, end_city, adj_cities, stack, visited, first)
-
-def depth_first_search(results, start_city, end_city, adj_cities, stack, visited, first):
-	#start_city is visited
-	visited.append(start_city)
-
-	#end_city is discovered
-	if(end_city in visited): 
-		#if last city in stack is end_city
-		if (stack[-1] == end_city):
-			#full valid path
-			stack.insert(0, first)
-			print("YES")
-			print(*stack, sep=', ')
-			print(get_total_distance(results, stack), "miles")
-		return stack
-
-	#add adj_city to stack to keep track of that path to the end_city
-	for adj_city in adj_cities:
-		if adj_city not in visited:
-			stack.append(adj_city)
-			adj_cities = get_connections(results, adj_city)
-			depth_first_search(results, adj_city, end_city, adj_cities, stack, visited, first)
 
 open_map("citymap.txt")
